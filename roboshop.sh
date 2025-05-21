@@ -18,4 +18,22 @@ do
         RECORD_NAME="$DOMAIN_NAME"
     fi
     echo "$instance IP address: $IP"
+
+    aws route53 change-resource-record-sets  \
+    --hosted-zone-id $ZONE_ID \
+    -- change-batch '
+    {
+        "Comment": "Creating or updating record set for endpoints",
+        "Changes": [{
+                "Action": "UPSERT",
+                "ResourceRecordSet": {
+                     "Name": "'$RECORD_NAME'",
+                     "Type": "A",
+                     "TTL": 1,
+                     "ResourceRecords": [{
+                            "Value": "'$IP'"
+                        }]
+                }
+            }]
+    }
 done
