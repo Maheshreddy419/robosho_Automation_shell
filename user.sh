@@ -10,7 +10,7 @@ N="\e[0m"
 LOG_FOLDER="/var/logs/roboshop-logs"
 SCRIPT_NAME=$(echo $0 | cut -d "." -f1)
 LOG_FILE="$LOG_FOLDER/$SCRIPT_NAME.log"
-$SCRIPT_DIR=$PWD
+SCRIPT_DIR=$PWD
 
 mkdir -p $LOG_FOLDER
 echo "Script execution started at $(date)" | tee -a $LOG_FILE
@@ -30,6 +30,7 @@ VALIDATE(){
     else
         echo -e "$2 is........ $R Failure $N" | tee -a $LOG_FILE
         exit 1
+    fi
 }
 
 dnf module disable nodejs -y &>>$LOG_FILE
