@@ -45,10 +45,10 @@ VALIDATE $? "Node Js Installation"
 id roboshop
 if [ $? -ne 0 ]
 then
-   useradd --system --home /app -shell /sbin/nologin/ --comment "Roboshop User" roboshop&>>$LOG_FILE
-   VALIDATE $? "roboshop user creation"
+    useradd --system --home /app --shell /sbin/nologin --comment "roboshop system user" roboshop &>>$LOG_FILE
+    VALIDATE $? "Creating roboshop system user"
 else
-    echo -e "User already Exists.... $Y skipping new user creation $N"&>>$LOG_FILE
+    echo -e "System user roboshop already created ... $Y SKIPPING $N"
 fi
 
 mkdir -p /app
