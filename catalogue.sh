@@ -1,12 +1,13 @@
 #!/bin/bash
 
+START_TIME=$(data +%s)
 USERID=$(id -u)
 R="\e[31m"
 G="\e[32m"
 Y="\e[33m"
 N="\e[0m"
 
-LOGS_FOLDER="/var/logs/roboshop.logs"
+LOGS_FOLDER="/var/logs/roboshop-logs"
 SCRIPT_NAME=$(echo $0 | cut -d "." -f1)
 LOG_FILE="$LOGS_FOLDER/$SCRIPT_NAME.log"
 $SCRIPT_DIR=$PWD
@@ -19,22 +20,24 @@ echo "Script excecution started at:: $(date)" | tee -a $LOG_FILE
 if [ $USERID -ne 0 ]
 then
     echo -e "$R ERROR:: Please Login with root user access $N"| tee -a $LOG_FILE
+    exit 1
 else
     echo -e "$G Login user is root user $N" | tee -a $LOG_FILE
 fi
 
 #this function is used to validate the input return the output
 VALIDATE() {
-    if [ $1 eq 0 ]
+    if [ $1 -eq 0 ]
     then
         echo -e "$2 is......$G SUCCESS $N" | tee -a $LOG_FILE
     else
         echo -e "$2 is...... $R FAILURE $N" | tee -a $LOG_FILE
+        exit 1
     fi
 }
 
 dnf module disable nodejs -y &>>$LOG_FILE
-VALIDATE $? "Disaabiling Node JS"
+VALIDATE $? "Disabiling Node JS"
 
 dnf module enable nodejs:20 -y &>>$LOG_FILE
 VALIDATE $? "Enabiling Nodejs:20"
@@ -57,6 +60,7 @@ VALIDATE $? "Creating app directory"
 curl -o /tmp/catalogue.zip https://roboshop-artifacts.s3.amazonaws.com/catalogue-v3.zip
 VALIDATE $? "Downloading catalogie"
 
+rm -rf /app/*
 cd /app 
 unzip /tmp/catalogue.zip
 VALIDATE $? "Unzipping the catalogue"
@@ -76,5 +80,16 @@ cp $SCRIPT_DIR/mongo.repo /etc/yum.repos.d/mongo.repo
 dnf install mongodb-mongosh -y &>>$LOG_FILE
 VALIDATE $? "Installing Mongod client"
 
-mongosh --host mongodb.maheshdevops.shop </app/db/master-data.js &>>$LOG_FILE
-VALIDATE $? "Loading Data"
+STATUS=$(mongosh --host mongodb.maheshdevops.shop --eval 'db.getMongo().getDBNames().indexOf("catalogue")')
+if [ $STATUS -lt 0 ]
+then
+    mongosh --host mongodb.maheshdevops.shop </app/db/master-data.js &>>$LOG_FILE
+    VALIDATE $? "Loading data into MongoDB"
+else
+    echo -e "Data is already loaded ... $Y SKIPPING $N"
+fi
+
+END_TIME=$(date +%s)
+TOTAL_TIME=$(( $END_TIME - $START_TIME ))
+
+echo -e "Time taken to execute the script is:: $Y $TOTAL_TIME $N" | tee -a $LOG_FILE
