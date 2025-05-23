@@ -33,7 +33,7 @@ VALIDATE(){
     fi
 }
 
-dnf diable redis -y &>>$LOG_FILE
+dnf disable redis -y &>>$LOG_FILE
 VALIDATE $? "Disabiling redis"
 
 dnf enable redis:7 -y &>>$LOG_FILE
