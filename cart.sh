@@ -1,7 +1,5 @@
 #!/bin/bash
 
-#!/bin/bash
-
 START_TIME=$(date +%s)
 USERID=$(id -u)
 R="\e[31m"
@@ -12,7 +10,7 @@ N="\e[0m"
 LOG_FOLDER="/var/logs/roboshop-logs"
 SCRIPT_NAME=$(echo $0 | cut -d "." -f1)
 LOG_FILE="$LOG_FOLDER/$SCRIPT_NAME.log"
-$SCRIPT_DIR=$PWD
+SCRIPT_DIR=$PWD
 
 mkdir -p $LOG_FOLDER
 echo "Script execution started at $(date)" | tee -a $LOG_FILE
