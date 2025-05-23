@@ -1,6 +1,6 @@
 #!/bin/bash
 
-START_TIME=$(data +%s)
+START_TIME=$(data '+%s')
 USERID=$(id -u)
 R="\e[31m"
 G="\e[32m"
