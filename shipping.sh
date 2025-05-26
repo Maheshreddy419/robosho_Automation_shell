@@ -38,7 +38,7 @@ VALIDATE(){
 }
 
 dnf install maven -y &>>$LOG_FILE
-VALIDATE $? "Installing maven"
+VALIDATE $? "Installing Maven and Java"
 
 id roboshop &>>$LOG_FILE
 if [ $? -ne 0 ]
@@ -49,38 +49,43 @@ else
     echo -e "System user roboshop already created ... $Y SKIPPING $N"
 fi
 
-mkdir -p /app
+mkdir -p /app 
 VALIDATE $? "Creating app directory"
 
-curl -L -o /tmp/shipping.zip https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip
-VALIDATE $? "Downloading the shipping service"
+curl -o /tmp/shipping.zip https://roboshop-artifacts.s3.amazonaws.com/shipping-v3.zip &>>$LOG_FILE
+VALIDATE $? "Downloading shipping"
 
 rm -rf /app/*
 cd /app 
 unzip /tmp/shipping.zip &>>$LOG_FILE
-VALIDATE $? "Unzipping the shipping service'
+VALIDATE $? "unzipping shipping"
+
+mvn clean package  &>>$LOG_FILE
+VALIDATE $? "Packaging the shipping application"
+
+mv target/shipping-1.0.jar shipping.jar  &>>$LOG_FILE
+VALIDATE $? "Moving and renaming Jar file"
 
 cp $SCRIPT_DIR/shipping.service /etc/systemd/system/shipping.service
-VALIDATE $? "Updated systemd"
 
 systemctl daemon-reload &>>$LOG_FILE
-VALIDATE $? "Daemon reloding"
+VALIDATE $? "Daemon Realod"
 
-systemctl enable shipping &>>$LOG_FILE
+systemctl enable shipping  &>>$LOG_FILE
 VALIDATE $? "Enabling Shipping"
 
 systemctl start shipping &>>$LOG_FILE
-VALIDATE $? "Starting shipping service"
+VALIDATE $? "Starting Shipping"
 
-dnf install mysql -y
-VALIDATE $? "Install mysql"
+dnf install mysql -y  &>>$LOG_FILE
+VALIDATE $? "Install MySQL"
 
 mysql -h mysql.daws84s.site -u root -p$MYSQL_ROOT_PASSWORD -e 'use cities' &>>$LOG_FILE
 if [ $? -ne 0 ]
 then
-    mysql -h mysql.daws84s.site -uroot -p$MYSQL_ROOT_PASSWORD < /app/db/schema.sql &>>$LOG_FILE
-    mysql -h mysql.daws84s.site -uroot -p$MYSQL_ROOT_PASSWORD < /app/db/app-user.sql  &>>$LOG_FILE
-    mysql -h mysql.daws84s.site -uroot -p$MYSQL_ROOT_PASSWORD < /app/db/master-data.sql &>>$LOG_FILE
+    mysql -h maheshdevops.shop -uroot -p$MYSQL_ROOT_PASSWORD < /app/db/schema.sql &>>$LOG_FILE
+    mysql -h maheshdevops.shop -uroot -p$MYSQL_ROOT_PASSWORD < /app/db/app-user.sql  &>>$LOG_FILE
+    mysql -h maheshdevops.shop -uroot -p$MYSQL_ROOT_PASSWORD < /app/db/master-data.sql &>>$LOG_FILE
     VALIDATE $? "Loading data into MySQL"
 else
     echo -e "Data is already loaded into MySQL ... $Y SKIPPING $N"
@@ -92,4 +97,4 @@ VALIDATE $? "Restart shipping"
 END_TIME=$(date +%s)
 TOTAL_TIME=$(( $END_TIME - $START_TIME ))
 
-echo -e "Time taken to execute the script is:: $Y $TOTAL_TIME $N" | tee -a $LOG_FILE
+echo -e "Script exection completed successfully, $Y time taken: $TOTAL_TIME seconds $N" | tee -a $LOG_FILE
